@@ -9,11 +9,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 
-db.init_app(app)
-
 #Configurações do Login
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+db.init_app(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -32,6 +34,12 @@ def login():
       login_user(user)
     return jsonify({'message': 'Login realizado com sucesso!'})
   return jsonify({'message': 'Dados inválidos'}), 400
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+  logout_user()
+  return jsonify({'message': 'Logout realizado com sucesso!'})
 
 
 if __name__ == '__main__':
