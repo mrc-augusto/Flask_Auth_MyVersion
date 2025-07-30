@@ -84,6 +84,23 @@ def update_user(id):
     db.session.commit()
     return jsonify({'message': f'Atualização do usuário {user_id.username} foi realizado com sucesso!'})
   return jsonify({'message': 'Usuário não encontrado'}), 404
+
+@app.route('/user/<int:id>', methods=['DELETE'])
+@login_required
+def delete_user(id):
+  user_id = User.query.get(id)
+
+  if id == current_user.id:
+    return jsonify({'message': 'Você não pode excluir sua própria conta'}), 403
+  
+  if current_user.role != 'admin':
+    return jsonify({'message': 'Você não tem permissão para excluir este usuário'}), 403
+  
+  if user_id:
+    db.session.delete(user_id)
+    db.session.commit()
+    return jsonify({'message': f'O usuário {user_id.username} foi excluído com sucesso!'})
+  return jsonify({'message': 'Usuário não encontrado'}), 404
   
 if __name__ == '__main__':
   app.run(debug=True)
