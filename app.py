@@ -2,12 +2,13 @@ from flask import Flask, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from database import db
 from models.users import User
+import bcrypt
 
 app = Flask(__name__)
 
 #Configurações Banco de DADOS
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin123@127.0.0.1:3306/flask-crud'
 
 #Configurações do Login
 login_manager = LoginManager()
@@ -30,7 +31,7 @@ def login():
   if username and password:
     user = User.query.filter_by(username=username).first()
 
-    if user and user.password == password:
+    if user and bcrypt.checkpw(str.encode(password), str.encode(user.password)):
       login_user(user)
     return jsonify({'message': 'Login realizado com sucesso!'})
   return jsonify({'message': 'Dados inválidos'}), 400
@@ -50,7 +51,8 @@ def create_user():
   email = data.get('email')
 
   if username and password:
-    new_user = User(username=username, password=password, email=email, role='user')
+    hashed_password = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
+    new_user = User(username=username, password=hashed_password, email=email, role='user')
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'Usuário criado com sucesso!'})
